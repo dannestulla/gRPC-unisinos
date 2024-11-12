@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package org.mes;
+
+service MesService {
+  rpc collectData(ProductionData) returns (DataResponse);
+  rpc processData(DataRequest) returns (DataReport);
+}
+
+message ProductionData {
+  int32 deviceId = 1;
+  string timestamp = 2;
+  double temperature = 3;
+  double vibration = 4;
+}
+
+message DataRequest {
+  int32 deviceId = 1;
+}
+
+message DataResponse {
+  string status = 1;
+}
+
+message DataReport {
+  int32 deviceId = 1;
+  double oee = 2;
+  string analysis = 3;
+}
