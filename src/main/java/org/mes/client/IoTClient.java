@@ -9,13 +9,29 @@ import java.time.LocalDateTime;
 
 public class IoTClient {
 
-    public static void main(String[] args) {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+    private final MesServiceGrpc.MesServiceBlockingStub stub;
+
+    public IoTClient(String host, int port){
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
                 .build();
 
-        MesServiceGrpc.MesServiceBlockingStub stub = MesServiceGrpc.newBlockingStub(channel);
+        stub = MesServiceGrpc.newBlockingStub(channel);
+    }
 
+    public static void main(String[] args) {
+        IoTClient client = new IoTClient("localhost", 50051);
+
+        // Simula diversas chamadas para testar o Mutex
+        for(int i=0; i<1000;i++){
+            System.out.println("Sending data  " + i);
+            client.sendProductionData();
+        }
+        System.out.println("Data simulation completed");
+    }
+
+    void sendProductionData() {
+        // Criação de uma solicitação
         Mes.ProductionData dataRequest = Mes.ProductionData.newBuilder()
                 .setDeviceId(101)
                 .setTimestamp(LocalDateTime.now().toString())
@@ -25,7 +41,5 @@ public class IoTClient {
 
         Mes.DataResponse response = stub.collectData(dataRequest);
         System.out.println("Response: " + response.getStatus());
-
-        channel.shutdown();
     }
 }

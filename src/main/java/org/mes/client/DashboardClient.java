@@ -5,7 +5,7 @@ import io.grpc.ManagedChannelBuilder;
 import org.mes.Mes;
 import org.mes.MesServiceGrpc;
 
-public class DashboardClient {
+public class DashboardClient extends Thread{
 
     public static void main(String[] args) {
         ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50052)

@@ -7,18 +7,27 @@ import org.mes.Mes;
 import org.mes.MesServiceGrpc;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class DataCollectionServer extends MesServiceGrpc.MesServiceImplBase {
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     @Override
     public void collectData(Mes.ProductionData request, StreamObserver<Mes.DataResponse> responseObserver) {
-        System.out.println("Data collected from device " + request.getDeviceId());
-
-        Mes.DataResponse response = Mes.DataResponse.newBuilder().setStatus("Data Collected").build();
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+        lock.lock();
+        try {
+            System.out.println("Data collected from device " + request.getDeviceId());
+            Thread.sleep(5000);
+            Mes.DataResponse response = Mes.DataResponse.newBuilder().setStatus("Data Collected").build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        } finally {
+            lock.unlock();
+        }
     }
-
 
     public static void main(String[] args) throws IOException, InterruptedException{
         Server server = ServerBuilder.forPort(50051)
