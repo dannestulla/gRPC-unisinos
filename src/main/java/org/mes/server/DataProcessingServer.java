@@ -7,9 +7,10 @@ import org.mes.Mes;
 import org.mes.MesServiceGrpc;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DataProcessingServer extends MesServiceGrpc.MesServiceImplBase {
-
 
     @Override
     public void processData(Mes.DataRequest request, StreamObserver<Mes.DataReport> responseObserver) {
@@ -24,8 +25,13 @@ public class DataProcessingServer extends MesServiceGrpc.MesServiceImplBase {
                 .setAnalysis(analysis)
                 .build();
 
-        responseObserver.onNext(report);
-        responseObserver.onCompleted();
+        try {
+            Thread.sleep(3000);
+            responseObserver.onNext(report);
+            responseObserver.onCompleted();
+        } catch (InterruptedException e) {
+            responseObserver.onError(e);
+        }
     }
 
 

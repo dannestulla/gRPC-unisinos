@@ -5,6 +5,7 @@ import io.grpc.ManagedChannelBuilder;
 import org.mes.Mes;
 import org.mes.MesServiceGrpc;
 
+import javax.swing.plaf.TableHeaderUI;
 import java.time.LocalDateTime;
 
 public class IoTClient {
@@ -20,14 +21,38 @@ public class IoTClient {
     }
 
     public static void main(String[] args) {
-        IoTClient client = new IoTClient("localhost", 50051);
+        final IoTClient client = new IoTClient("localhost", 50051);
 
-        // Simula diversas chamadas para testar o Mutex
-        for(int i=0; i<1000;i++){
-            System.out.println("Sending data  " + i);
-            client.sendProductionData();
+        // Número de threads para simular dispositivos IoT
+        int numberOfThreads = 10;
+        // Criação de um pool de threads para gerenciar envio simultâneo
+        Thread[] threads = new Thread[numberOfThreads];
+
+        for(int i=0; i<numberOfThreads;i++){
+            threads[i] = new Thread(() -> {
+                System.out.println("Thread started.");
+                client.sendProductionData();
+                System.out.println("Thread completed.");
+            });
+
         }
-        System.out.println("Data simulation completed");
+
+        // Iniciar todas as threads
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        // Aguarda todas as threads concluírem a execução
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.err.println("Thread interrupted: " + e.getMessage());
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        System.out.println("Data simulation completed.");
     }
 
     void sendProductionData() {

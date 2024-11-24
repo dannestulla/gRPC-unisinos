@@ -7,25 +7,33 @@ import org.mes.Mes;
 import org.mes.MesServiceGrpc;
 
 import java.io.IOException;
+import java.util.Random;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class DataCollectionServer extends MesServiceGrpc.MesServiceImplBase {
 
-    private final ReentrantLock lock = new ReentrantLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
     public void collectData(Mes.ProductionData request, StreamObserver<Mes.DataResponse> responseObserver) {
-        lock.lock();
+        lock.readLock().lock();
         try {
             System.out.println("Data collected from device " + request.getDeviceId());
-            Thread.sleep(5000);
+            // pre-processamento dos dados, incluindo leitura do que já está salvo, nao exige lock
+            // writelock somente no momento de gravar
+            lock.writeLock().lock();
+            Thread.sleep(new Random().nextInt(10, 120)); // simula gravaçao
+            lock.writeLock().unlock();
             Mes.DataResponse response = Mes.DataResponse.newBuilder().setStatus("Data Collected").build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(e);
         } finally {
-            lock.unlock();
+            lock.readLock().unlock();
         }
     }
 
